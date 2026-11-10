@@ -1,4 +1,8 @@
-# kumapulse
+<p align="center">
+  <img src="assets/logo.svg" width="96" alt="kumapulse logo">
+</p>
+
+<h1 align="center">kumapulse</h1>
 
 **Prometheus metrics for Uptime Kuma — one static binary, no agent, no credentials.**
 
