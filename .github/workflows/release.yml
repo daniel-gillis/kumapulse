@@ -12,31 +12,38 @@ permissions:
 jobs:
   binaries:
     name: ${{ matrix.target }}
-    runs-on: ubuntu-latest
+    # Linux targets cross-compile from Ubuntu; Apple targets must build on macOS
+    # (the SDK is not redistributable), so each entry names its own runner.
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { target: x86_64-unknown-linux-musl,  os: linux,  arch: amd64 }
-          - { target: aarch64-unknown-linux-musl, os: linux,  arch: arm64 }
-          - { target: x86_64-apple-darwin,        os: darwin, arch: amd64 }
-          - { target: aarch64-apple-darwin,       os: darwin, arch: arm64 }
+          - { target: x86_64-unknown-linux-musl,  os: linux,  arch: amd64, runner: ubuntu-latest, cross: true }
+          - { target: aarch64-unknown-linux-musl, os: linux,  arch: arm64, runner: ubuntu-latest, cross: true }
+          - { target: x86_64-apple-darwin,        os: darwin, arch: amd64, runner: macos-13,      cross: false }
+          - { target: aarch64-apple-darwin,       os: darwin, arch: arm64, runner: macos-latest,  cross: false }
     steps:
       - uses: actions/checkout@v4
-      - name: Build static binary
+      - name: Build (cross, Linux)
+        if: matrix.cross
         uses: houseabsolute/actions-rust-cross@v0
         with:
           command: build
           target: ${{ matrix.target }}
           args: "--release --locked"
+      - name: Build (native, macOS)
+        if: ${{ !matrix.cross }}
+        run: |
+          rustup target add ${{ matrix.target }}
+          cargo build --release --locked --target ${{ matrix.target }}
       - name: Package
         run: |
           set -euo pipefail
-          BIN=target/${{ matrix.target }}/release/kumapulse
           OUT=kumapulse-${{ matrix.os }}-${{ matrix.arch }}
-          cp "$BIN" "$OUT"
-          sha256sum "$OUT" > "$OUT.sha256"
-          echo "size: $(du -h "$OUT" | cut -f1)"
+          cp "target/${{ matrix.target }}/release/kumapulse" "$OUT"
+          if command -v sha256sum >/dev/null; then sha256sum "$OUT"; else shasum -a 256 "$OUT"; fi | tee "$OUT.sha256"
+          du -h "$OUT"
       - uses: actions/upload-artifact@v4
         with:
           name: kumapulse-${{ matrix.os }}-${{ matrix.arch }}
@@ -63,7 +70,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -88,7 +95,7 @@ jobs:
           generate_release_notes: true
           body: |
             Static binaries for Linux (musl, amd64/arm64) and macOS (amd64/arm64),
-            plus a multi-arch distroless container image at
+            plus a multi-arch distroless image at
             `ghcr.io/${{ github.repository_owner }}/kumapulse`.
 
-            Verify a download with the `.sha256` file beside it.
+            Verify a download against the `.sha256` file beside it.
