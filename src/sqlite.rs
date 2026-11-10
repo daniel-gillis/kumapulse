@@ -97,11 +97,8 @@ fn load_monitors(
     let mut stmt = conn
         .prepare("SELECT * FROM monitor")
         .map_err(|e| SourceError::Database(format!("monitor: {e}")))?;
-    let columns: Vec<String> = stmt
-        .column_names()
-        .iter()
-        .map(|c| (*c).to_owned())
-        .collect();
+    // rusqlite 0.41 returns an iterator here rather than a slice.
+    let columns: Vec<String> = stmt.column_names().map(str::to_owned).collect();
     let index = |name: &str| columns.iter().position(|c| c == name);
 
     let (Some(id_i), Some(name_i)) = (index("id"), index("name")) else {

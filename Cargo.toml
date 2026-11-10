@@ -2,7 +2,7 @@
 name = "kumapulse"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version = "1.89"
 description = "Prometheus exporter for Uptime Kuma — one static binary, no auth, no agent"
 license = "MIT"
 repository = "https://github.com/daniel-gillis/kumapulse"
@@ -15,7 +15,9 @@ categories = ["command-line-utilities", "development-tools::profiling"]
 [dependencies]
 # Deliberately small: an exporter that adds CVEs to the thing it monitors is not
 # an improvement. Every dependency here is one you can justify.
-rusqlite = { version = "0.32", features = ["bundled"] }   # bundled = pinned SQLite, no system lib
+# 0.41 bundles SQLite 3.54.1: earlier releases bundle a version affected by
+# CVE-2026-119375 (uninitialised page-cache bytes when a crafted -wal is present).
+rusqlite = { version = "0.41", features = ["bundled"] }
 ureq = { version = "2.10", features = ["json", "tls"] }   # small blocking HTTP client, rustls
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

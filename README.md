@@ -6,7 +6,8 @@
 [![Release](https://img.shields.io/github/v/release/daniel-gillis/kumapulse)](https://github.com/daniel-gillis/kumapulse/releases)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Image size](https://img.shields.io/badge/image-~8%20MB-informational)](Dockerfile)
-[![Binary](https://img.shields.io/badge/binary-3.3%20MB-informational)](#performance)
+[![Binary](https://img.shields.io/badge/binary-3.4%20MB-informational)](#performance)
+[![MSRV](https://img.shields.io/badge/MSRV-1.89-informational)](Cargo.toml)
 
 Uptime Kuma is excellent at *checking* things and poor at *being checked*. It has
 no Prometheus endpoint, so its uptime, latency and certificate data never reach
@@ -17,7 +18,7 @@ the dashboards and alerting you already run. `kumapulse` closes that gap:
 - **No new failure mode.** A failed read serves the last good snapshot marked
   stale, instead of blanking your dashboards.
 - **Tiny.** 3.3 MB static binary, ~12 MiB RSS, idle at 0% CPU.
-- **Zero CVEs by construction.** Four dependencies, distroless image, no shell.
+- **Zero known CVEs.** Four dependencies, `cargo-deny` gates advisories in CI, distroless image, no shell.
 
 ```console
 $ docker run -d --name kumapulse \
@@ -217,7 +218,7 @@ monitors** and 30 days of heartbeat history:
 
 | | Value |
 |---|---|
-| Release binary | **3.3 MB** (static, stripped, `opt-level="z"`, fat LTO) |
+| Release binary | **3.4 MB** (static, stripped, `opt-level="z"`, fat LTO) |
 | Container image | **~8 MB** (distroless static, non-root, no shell) |
 | Resident memory | **11.8 MiB** |
 | CPU at idle | **0.0 %** |

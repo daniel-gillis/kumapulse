@@ -49,12 +49,12 @@ jobs:
 
   msrv:
     # Pinned to the lowest toolchain that actually compiles the dependency tree
-    # (the ICU crates pulled in by the HTTP stack require 1.88).
+    # (rusqlite 0.41 bundles SQLite 3.54.1 to clear CVE-2026-119375 and declares 1.89).
     name: minimum supported rust
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.89.0
       - run: cargo build --locked
 
   binary-size:
