@@ -48,11 +48,13 @@ jobs:
         run: cargo deny check
 
   msrv:
+    # Pinned to the lowest toolchain that actually compiles the dependency tree
+    # (the ICU crates pulled in by the HTTP stack require 1.88).
     name: minimum supported rust
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
+      - uses: dtolnay/rust-toolchain@1.88.0
       - run: cargo build --locked
 
   binary-size:
