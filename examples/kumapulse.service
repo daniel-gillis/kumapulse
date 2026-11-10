@@ -1,0 +1,33 @@
+[Unit]
+Description=kumapulse — Prometheus exporter for Uptime Kuma
+Documentation=https://github.com/daniel-gillis/kumapulse
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Run as the user that can read Uptime Kuma's data directory.
+User=uptime-kuma
+Group=uptime-kuma
+ExecStart=/usr/local/bin/kumapulse --source sqlite --db /opt/uptime-kuma/kuma.db
+Environment=KUMA_LISTEN=127.0.0.1:9797
+Restart=always
+RestartSec=5
+
+# Hardening: the exporter only needs to read one directory and bind one port.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadOnlyPaths=/opt/uptime-kuma
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,33 @@
+# cargo-deny policy: the supply-chain rules this project holds itself to.
+#
+# An exporter exists to reduce operational risk. Shipping one that drags in an
+# unmaintained crate tree would be self-defeating, so advisories are denied
+# rather than warned, and licences are allow-listed.
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = []
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.93
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,22 @@
+services:
+  # Prometheus exporter for Uptime Kuma. Read-only mount of Kuma's data
+  # directory: the exporter needs kuma.db plus its -wal/-shm siblings.
+  kumapulse:
+    image: ghcr.io/daniel-gillis/kumapulse:latest
+    container_name: kumapulse
+    restart: unless-stopped
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - /opt/uptime-kuma:/kuma:ro
+    environment:
+      KUMA_SOURCE: sqlite
+      KUMA_DB: /kuma/kuma.db
+      KUMA_CACHE_SECONDS: "15"
+    ports:
+      - "9797:9797"
+    healthcheck:
+      test: ["CMD", "/kumapulse", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

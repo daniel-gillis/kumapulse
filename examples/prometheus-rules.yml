@@ -1,0 +1,62 @@
+# Prometheus alerting rules for kumapulse.
+#
+# Load with:
+#   rule_files:
+#     - /etc/prometheus/rules/kumapulse.yml
+
+groups:
+  - name: kumapulse
+    interval: 30s
+    rules:
+      - alert: KumapulseExporterDown
+        expr: up{job="kumapulse"} == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "kumapulse is not responding on {{ $labels.instance }}"
+          description: "Metrics for Uptime Kuma are unavailable; monitoring is blind."
+
+      - alert: KumapulseStaleData
+        expr: kumapulse_scrape_success == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "kumapulse cannot read Uptime Kuma"
+          description: "Serving cached metrics {{ $value }} — check the data source path or URL."
+
+      - alert: MonitorDown
+        expr: kumapulse_monitor_up == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.monitor }} is down"
+          description: "Uptime Kuma reports {{ $labels.monitor }} ({{ $labels.type }} {{ $labels.url }}) as down."
+
+      - alert: ChecksStalled
+        # The alert Uptime Kuma itself cannot give you: a monitor that stopped
+        # running is not the same as a monitor that is up.
+        expr: kumapulse_monitor_heartbeat_age_seconds > 300
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.monitor }} has not been checked recently"
+          description: "Last heartbeat was {{ $value | printf \"%.0f\" }}s ago."
+
+      - alert: CertificateExpiringSoon
+        expr: (kumapulse_monitor_tls_expiry_timestamp_seconds - time()) / 86400 < 21
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          summary: "Certificate for {{ $labels.monitor }} expires soon"
+          description: "{{ $value | printf \"%.0f\" }} days remaining."
+
+      - alert: UptimeBudgetBurn
+        expr: kumapulse_monitor_uptime_ratio{window="24h"} < 0.99
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.monitor }} is below its 99% daily budget"
+          description: "24h uptime is {{ $value | printf \"%.3f\" }}."
+
+      - record: kumapulse:monitors_down:sum
+        expr: sum(kumapulse_monitor_up == 0)

@@ -1,0 +1,54 @@
+[package]
+name = "kumapulse"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Prometheus exporter for Uptime Kuma — one static binary, no auth, no agent"
+license = "MIT"
+repository = "https://github.com/daniel-gillis/kumapulse"
+homepage = "https://github.com/daniel-gillis/kumapulse"
+documentation = "https://github.com/daniel-gillis/kumapulse#readme"
+readme = "README.md"
+keywords = ["prometheus", "uptime-kuma", "monitoring", "metrics", "exporter"]
+categories = ["command-line-utilities", "development-tools::profiling"]
+
+[dependencies]
+# Deliberately small: an exporter that adds CVEs to the thing it monitors is not
+# an improvement. Every dependency here is one you can justify.
+rusqlite = { version = "0.32", features = ["bundled"] }   # bundled = pinned SQLite, no system lib
+ureq = { version = "2.10", features = ["json", "tls"] }   # small blocking HTTP client, rustls
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tiny_http = "0.12"                                        # minimal blocking HTTP server
+
+[profile.release]
+opt-level = "z"      # size over speed: this process is idle 99.9% of the time
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package."*"]
+opt-level = 3        # dependencies (SQLite) keep full speed
+
+[[bin]]
+name = "kumapulse"
+path = "src/main.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+# Timestamps (ms), heartbeat counts and monitor counts are far below 2^53, so
+# these casts are exact in practice and the alternatives are noisier than the
+# risk. Metric rendering is deliberately one linear function.
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+too_many_lines = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
